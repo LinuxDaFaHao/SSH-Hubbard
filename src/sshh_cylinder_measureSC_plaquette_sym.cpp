@@ -137,6 +137,7 @@ int main(int argc, char *argv[]) {
 
   if (world.rank() == 0) {
     MeasureElectronPhonon4PointFunction(mps,
+					Ly,
                                         sc_phys_ops_a,
                                         justify_symmetry_fourpoint_sitessetF,
                                         "scsPSa" + file_name_postfix);//PS for plaquette symmetry
@@ -147,11 +148,13 @@ int main(int argc, char *argv[]) {
                                         "scsPSb" + file_name_postfix);
   } else if (world.rank() == 2) {
     MeasureElectronPhonon4PointFunction(mps,
+					Ly,
                                         sc_phys_ops_c,
                                         justify_symmetry_fourpoint_sitessetF,
                                         "scsPSc" + file_name_postfix);
   } else if (world.rank() == 3) {
     MeasureElectronPhonon4PointFunction(mps,
+					Ly,
                                         sc_phys_ops_d,
                                         justify_symmetry_fourpoint_sitessetF,
                                         "scsPSd" + file_name_postfix);
