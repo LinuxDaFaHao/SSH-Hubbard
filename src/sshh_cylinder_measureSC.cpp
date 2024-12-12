@@ -3,26 +3,26 @@
     for measure pair correlation function. memory optimized and parallel version.
     usage:
         mpirun -n 4 ./measureSC
-    note: processor number must be 4.
+    note: processor number must be 4, because there are four group of operators
     Optional arguments:
       --start=
       --end=
 */
+
+#include <ctime>
+#include <stdlib.h>
+#include "boost/mpi.hpp"
+
+#include "qlmps/qlmps.h"
+#include "qlten/qlten.h"
+#include "qlten/utility/timer.h"
+
 #include "gqdouble.h"
 #include "operators.h"
 #include "params_case.h"
 
-#include "qlmps/qlmps.h"
-#include "qlten/qlten.h"
-#include <time.h>
-#include <stdlib.h>
-
 #include "myutil.h"
 #include "my_measure.h"
-
-#include "qlten/utility/timer.h"
-
-#include "boost/mpi.hpp"
 
 using std::cout;
 using std::endl;
@@ -126,13 +126,13 @@ int main(int argc, char *argv[]) {
   }
 
   if (world.rank() == 0) {
-    MeasureElectronPhonon4PointFunction(mps, sc_phys_ops_a, yy_fourpoint_sitessetF, "scsyya" + file_name_postfix);
+    MeasureElectronPhonon4PointFunction(mps, Ly, sc_phys_ops_a, yy_fourpoint_sitessetF, "scsyya" + file_name_postfix);
   } else if (world.rank() == 1) {
-    MeasureElectronPhonon4PointFunction(mps, sc_phys_ops_b, yy_fourpoint_sitessetF, "scsyyb" + file_name_postfix);
+    MeasureElectronPhonon4PointFunction(mps, Ly, sc_phys_ops_b, yy_fourpoint_sitessetF, "scsyyb" + file_name_postfix);
   } else if (world.rank() == 2) {
-    MeasureElectronPhonon4PointFunction(mps, sc_phys_ops_c, yy_fourpoint_sitessetF, "scsyyc" + file_name_postfix);
+    MeasureElectronPhonon4PointFunction(mps, Ly, sc_phys_ops_c, yy_fourpoint_sitessetF, "scsyyc" + file_name_postfix);
   } else if (world.rank() == 3) {
-    MeasureElectronPhonon4PointFunction(mps, sc_phys_ops_d, yy_fourpoint_sitessetF, "scsyyd" + file_name_postfix);
+    MeasureElectronPhonon4PointFunction(mps, Ly, sc_phys_ops_d, yy_fourpoint_sitessetF, "scsyyd" + file_name_postfix);
   }
 
   cout << "measured y--y four point function.<====" << endl;

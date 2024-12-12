@@ -412,6 +412,7 @@ in electron-phonon system, especially for d-wave/t-wave pair correlation.
 template<typename TenElemT, typename QNT>
 inline MeasuRes<TenElemT> MeasureElectronPhonon4PointFunction(
     FiniteMPS<TenElemT, QNT> &mps,
+    const size_t Ly,
     const std::vector<QLTensor<TenElemT, QNT>> &phys_ops,
     const std::vector<std::vector<size_t>> &sites_set,
     const std::string &res_file_basename
@@ -421,7 +422,6 @@ inline MeasuRes<TenElemT> MeasureElectronPhonon4PointFunction(
   for (size_t i = 0; i <= left_boundary + 1; i++) {
     mps.dealloc(i);
   }
-  const size_t Ly = 4; //change here when Ly of system changes
   std::cout << "note: Ly = " << Ly << std::endl;
   assert(phys_ops.size() == 4); // 4-point function
   assert(sites_set.size() % Ly == 0);
