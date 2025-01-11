@@ -9,7 +9,7 @@
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
-#include "boost/mpi.hpp"
+
 
 namespace qlmps {
 using namespace qlten;
@@ -243,10 +243,12 @@ inline MeasuRes<TenElemT> MeasureTwoSiteOp(
     const std::vector<std::vector<size_t>> &sites_set,
     const size_t Ly,
     const std::string &res_file_basename,
-    const boost::mpi::communicator &world
+    const MPI_Comm& comm
 ) {
   assert(mps.empty());
-
+  int rank, mpi_size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &mpi_size);
   const size_t left_boundary = FindLeftBoundary(mps);
   const size_t initial_center = left_boundary + 1;
   for (size_t i = 0; i < initial_center; i++) {
@@ -255,9 +257,9 @@ inline MeasuRes<TenElemT> MeasureTwoSiteOp(
 
   assert(sites_set[0].size() == 2);
   const size_t total_event_size = sites_set.size();
-  assert(world.size() >= Ly);
+  assert(mpi_size >= Ly);
   const size_t event_size_every_group = total_event_size / Ly;
-  const size_t group = world.rank();
+  const size_t group = rank;
   MeasuRes<TenElemT> measure_res;
   if (group < Ly) {
     const size_t site1 = sites_set[group * event_size_every_group][0];
@@ -273,7 +275,7 @@ inline MeasuRes<TenElemT> MeasureTwoSiteOp(
     measure_res = MeasureTwoSiteOpGroup(mps, initial_center, phys_ops1, phys_ops2, site1, site2_set);
   }
   if (group >= Ly) {
-    std::cout << "warning: processor " << world.rank() << " are idle." << std::endl;
+    std::cout << "warning: processor " << rank << " are idle." << std::endl;
   }
 
   /*

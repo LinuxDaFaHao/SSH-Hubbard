@@ -14,9 +14,11 @@ using namespace std;
 #include "params_case.h"
 
 int main(int argc, char *argv[]) {
-  namespace mpi = boost::mpi;
-  mpi::environment env;
-  mpi::communicator world;
+  MPI_Init(nullptr, nullptr);
+  MPI_Comm comm = MPI_COMM_WORLD;
+  int rank, mpi_size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &mpi_size);
   CaseParams params(argv[1]);
   unsigned Lx = params.Lx, Ly = params.Ly, Np = params.Np;
   unsigned N = Lx * Ly + (2 * Lx * Ly - Ly) * Np;
@@ -54,8 +56,8 @@ int main(int argc, char *argv[]) {
   using FiniteMPST = qlmps::FiniteMPS<TenElemT, U1U1QN>;
   FiniteMPST mps(sites);
 
-  if (world.rank() == 0&&params.TotalThreads > 2) {
-      qlten::hp_numeric::SetTensorManipulationThreads(params.TotalThreads - 2);
+  if (rank == 0 && params.TotalThreads > 2) {
+    qlten::hp_numeric::SetTensorManipulationThreads(params.TotalThreads - 2);
   } else {
     qlten::hp_numeric::SetTensorManipulationThreads(params.TotalThreads);
   }
@@ -83,7 +85,7 @@ int main(int argc, char *argv[]) {
       qn_label = 3 - qn_label;
     }
   }
-  if (world.rank() == 0) {
+  if (rank == 0) {
     if (IsPathExist(kMpsPath)) {//mps only can be load from file
       if (N == GetNumofMps()) {
         cout << "The number of mps files is consistent with mps size." << endl;
@@ -102,17 +104,18 @@ int main(int argc, char *argv[]) {
     }
   }
   double e0;
-  if (world.size() == 1) {
+  if (mpi_size == 1) {
     e0 = qlmps::TwoSiteFiniteVMPS(mps, mpo, sweep_params);
   } else {
-    e0 = qlmps::TwoSiteFiniteVMPS(mps, mpo, sweep_params, world);
+    e0 = qlmps::TwoSiteFiniteVMPS(mps, mpo, sweep_params, comm);
   }
 
-  if (world.rank() == 0) {
+  if (rank == 0) {
     std::cout << "E0/site: " << e0 / N << std::endl;
     endTime = clock();
     cout << "CPU Time : " << (double) (endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
   }
+  MPI_Finalize();
   return 0;
 
 }

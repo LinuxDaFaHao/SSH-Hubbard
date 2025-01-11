@@ -16,19 +16,17 @@ using namespace std;
 #include "params_case.h"
 
 int main(int argc, char *argv[]) {
-  namespace mpi = boost::mpi;
-  mpi::environment env(mpi::threading::multiple);
-  if (env.thread_level() < mpi::threading::multiple) {
-    std::cout << "thread level of env is not right." << std::endl;
-    env.abort(-1);
-  }
-  mpi::communicator world;
+  MPI_Init(nullptr, nullptr);
+  MPI_Comm comm = MPI_COMM_WORLD;
+  int rank, mpi_size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &mpi_size);
   CaseParams params(argv[1]);
   size_t Lx = params.Lx, Ly = params.Ly, Np = params.Np;
   size_t N = (1 + Np) * (Lx * Ly);
   float t = params.t, g = params.g, U = params.U, omega = params.omega;
 
-  if (world.rank() == 0) {
+  if (rank == 0) {
     std::cout << "Holstein Model DMRG." << std::endl;
     cout << "System size = (" << Lx << "," << Ly << ")" << endl;
     cout << "The number of electron sites =" << Lx * Ly << endl;
@@ -65,7 +63,7 @@ int main(int argc, char *argv[]) {
     mpo.LoadTen(i, filename);
   }
 
-  if (world.rank() == 0) {
+  if (rank == 0) {
     cout << "MPO loaded." << endl;
   }
   using FiniteMPST = qlmps::FiniteMPS<TenElemT, U1U1QN>;
@@ -89,7 +87,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  if (world.rank() == 0) {
+  if (rank == 0) {
     if (params.TotalThreads > 2) {
 
       qlten::hp_numeric::SetTensorManipulationThreads(params.TotalThreads - 2);
@@ -109,7 +107,7 @@ int main(int argc, char *argv[]) {
       params.noise
   );
 
-  if (world.rank() == 0) {
+  if (rank == 0) {
     if (IsPathExist(kMpsPath)) {//mps only can be load from file
       if (N == GetNumofMps()) {
         cout << "The number of mps files is consistent with mps size." << endl;
@@ -128,7 +126,7 @@ int main(int argc, char *argv[]) {
 
   double e0;
   if (!has_bond_dimension_parameter) {
-    e0 = qlmps::TwoSiteFiniteVMPS2(mps, mpo, sweep_params, world);
+    e0 = qlmps::TwoSiteFiniteVMPS2(mps, mpo, sweep_params, comm);
   } else {
     size_t DMRG_time = input_D_set.size();
     std::vector<size_t> MaxLanczIterSet(DMRG_time);
@@ -149,19 +147,20 @@ int main(int argc, char *argv[]) {
 
     for (size_t i = 0; i < DMRG_time; i++) {
       size_t D = input_D_set[i];
-      if (world.rank() == 1) {
+      if (rank == 1) {
         std::cout << "D_max = " << D << std::endl;
       }
       sweep_params.Dmax = D;
       sweep_params.Dmin = D;
-      e0 = qlmps::TwoSiteFiniteVMPS(mps, mpo, sweep_params, world);
+      e0 = qlmps::TwoSiteFiniteVMPS(mps, mpo, sweep_params, comm);
     }
   }
 
-  if (world.rank() == 0) {
+  if (rank == 0) {
     std::cout << "E0/site: " << e0 / N << std::endl;
     endTime = clock();
     cout << "CPU Time : " << (double) (endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
   }
+  MPI_Finalize();
   return 0;
 }

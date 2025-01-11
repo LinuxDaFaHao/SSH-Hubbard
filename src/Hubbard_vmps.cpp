@@ -4,21 +4,23 @@
 #include "params_case.h"
 #include "gqdouble.h"
 #include "myutil.h"
-#include "boost/mpi.hpp"
+
 using namespace qlmps;
 using namespace qlten;
 using namespace std;
 
 int main(int argc, char *argv[]) {
-  namespace mpi = boost::mpi;
-  mpi::environment env;
-  mpi::communicator world;
+  MPI_Init(nullptr, nullptr);
+  MPI_Comm comm = MPI_COMM_WORLD;
+  int rank, mpi_size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &mpi_size);
 
   CaseParams params(argv[1]);
   size_t Lx = params.Lx, Ly = params.Ly;
   size_t N = Lx * Ly;
 
-  if (world.rank() == 0) {
+  if (rank == 0) {
     cout << "System size = (" << Lx << "," << Ly << ")" << endl;
     cout << "The number of electron sites =" << Lx * Ly << endl;
     cout << "The total number of sites = " << N << endl;
@@ -113,7 +115,7 @@ int main(int argc, char *argv[]) {
       sz_label++;
     }
   }
-  if (world.rank() == 0) {
+  if (rank == 0) {
     if (IsPathExist(kMpsPath)) {
       if (N == GetNumofMps()) {
         cout << "The number of mps files is consistent with mps size." << endl;
@@ -130,13 +132,13 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  world.barrier();
+  MPI_Barrier(comm);
   if (!has_bond_dimension_parameter) {
-    e0 = qlmps::TwoSiteFiniteVMPS(mps, mpo, sweep_params, world);
+    e0 = qlmps::TwoSiteFiniteVMPS(mps, mpo, sweep_params, comm);
   } else {
     for (size_t i = 0; i < DMRG_time; i++) {
       size_t D = input_D_set[i];
-      if (world.rank() == 1) {
+      if (rank == 1) {
         std::cout << "D_max = " << D << std::endl;
       }
       qlmps::FiniteVMPSSweepParams sweep_params(
@@ -144,11 +146,11 @@ int main(int argc, char *argv[]) {
           D, D, params.CutOff,
           qlmps::LanczosParams(params.LanczErr, MaxLanczIterSet[i])
       );
-      e0 = qlmps::TwoSiteFiniteVMPS(mps, mpo, sweep_params, world);
+      e0 = qlmps::TwoSiteFiniteVMPS(mps, mpo, sweep_params, comm);
     }
   }
 
-  if (world.rank() == 0) {
+  if (rank == 0) {
     std::cout << "E0/site: " << e0 / N << std::endl;
   }
   endTime = clock();

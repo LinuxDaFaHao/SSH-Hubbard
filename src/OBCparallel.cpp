@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
   using FiniteMPST = qlmps::FiniteMPS<TenElemT, U1U1QN>;
   FiniteMPST mps(sites);
 
-  if (world.rank() == 0) {
+  if (rank == 0) {
     if (params.TotalThreads > 2) {
 
       qlten::hp_numeric::SetTensorManipulationThreads(params.TotalThreads - 2);
@@ -93,8 +93,8 @@ int main(int argc, char *argv[]) {
     cout << " no mps file" << endl;
     env.abort(-1);
   }
-  auto e0 = qlmps::TwoSiteFiniteVMPS2(mps, mpo, sweep_params, world);
-  if (world.rank() == 0) {
+  auto e0 = qlmps::TwoSiteFiniteVMPS2(mps, mpo, sweep_params, comm);
+  if (rank == 0) {
     std::cout << "E0/site: " << e0 / N << std::endl;
     endTime = clock();
     cout << "CPU Time : " << (double) (endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;

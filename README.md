@@ -14,16 +14,14 @@ The research on the SSHH model was summarized in [arXiv:2211.09143](https://arxi
 Hao-Xin Wang  <wanghx18@mails.tsinghua.edu.cn>
 
 ## Dependence
-- [QuantumLiquids/tensor](https://github.com/QuantumLiquids/tensor), branch dev-v0.2-MagicChangeExpansion
-- [QuantumLiquids/MPS2](https://github.com/QuantumLiquids/MPS2), branch dev-v0.2-OptimizeLanczos
-- Boost::mpi, Boost::serialization, Boost headers
 - MPI
 - Intel MKL
+- [QuantumLiquids/TensorToolkit](https://github.com/QuantumLiquids/TensorToolkit)
+- [QuantumLiquids/UltraDMRG](https://github.com/QuantumLiquids/UltraDMRG)
 - [springer13/hptt](https://github.com/springer13/hptt)
 
 
 ## Usage
-First install above dependencies. Note the Boost::mpi should keep the same version with bard MPI.
 Then configure the project in a directory `build` by CMakeLists.txt. 
 Remember to hint the dependencies path to Cmake. After automatically finding all the dependencies and 
 configuration, run
@@ -44,9 +42,3 @@ to utilize variational MPS algorithm (people always call it DMRG) to optimize gr
 You should run it once and once again and adjust params.json at the same time.
 
 Other programs in CMake targets are used to measure correlations, or calculate for open boundary conditions, or calculate for the Holstein-Hubbard model.
-
-## Calculation time scale
-For a $4\times 40$ lattice with phonon pseudo-site number 3, if you're lucky so that the cluster is stable,
-and if you're working hard enough so that the program is always running under appropriate parameters,
-using about 240 CPU cores at the same time, it requests about 1 year to push the bond dimension to $D\sim 18000$, 
-due to the complexity induced by the phonon hilbert space.

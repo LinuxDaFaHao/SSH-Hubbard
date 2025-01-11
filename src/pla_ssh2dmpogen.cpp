@@ -2,8 +2,6 @@
 #include "gqdouble.h"
 #include "operators.h"
 #include <time.h>
-#include <vector>
-#include <stdlib.h>     // system
 #include "qlmps/qlmps.h"
 
 using namespace qlmps;

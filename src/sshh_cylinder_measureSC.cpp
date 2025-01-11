@@ -11,7 +11,7 @@
 
 #include <ctime>
 #include <stdlib.h>
-#include "boost/mpi.hpp"
+
 
 #include "qlmps/qlmps.h"
 #include "qlten/qlten.h"
@@ -34,9 +34,11 @@ using qlten::Timer;
 using qlmps::MeasureElectronPhonon4PointFunction;
 
 int main(int argc, char *argv[]) {
-  namespace mpi = boost::mpi;
-  mpi::environment env;
-  mpi::communicator world;
+  MPI_Init(nullptr, nullptr);
+  MPI_Comm comm = MPI_COMM_WORLD;
+  int rank, mpi_size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &mpi_size);
   clock_t startTime, endTime;
   startTime = clock();
 
@@ -125,13 +127,13 @@ int main(int argc, char *argv[]) {
     file_name_postfix = "";
   }
 
-  if (world.rank() == 0) {
+  if (rank == 0) {
     MeasureElectronPhonon4PointFunction(mps, Ly, sc_phys_ops_a, yy_fourpoint_sitessetF, "scsyya" + file_name_postfix);
-  } else if (world.rank() == 1) {
+  } else if (rank == 1) {
     MeasureElectronPhonon4PointFunction(mps, Ly, sc_phys_ops_b, yy_fourpoint_sitessetF, "scsyyb" + file_name_postfix);
-  } else if (world.rank() == 2) {
+  } else if (rank == 2) {
     MeasureElectronPhonon4PointFunction(mps, Ly, sc_phys_ops_c, yy_fourpoint_sitessetF, "scsyyc" + file_name_postfix);
-  } else if (world.rank() == 3) {
+  } else if (rank == 3) {
     MeasureElectronPhonon4PointFunction(mps, Ly, sc_phys_ops_d, yy_fourpoint_sitessetF, "scsyyd" + file_name_postfix);
   }
 

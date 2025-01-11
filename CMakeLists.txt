@@ -98,7 +98,7 @@ else () # Use OpenBlas
         set(OpenBLAS_LIBRARIES "${OpenBLAS_ROOT}/lib/libblas.dylib")
         message(${OpenBLAS_LIBRARIES})
         set(MATH_LIB_COMPILE_FLAGS -I${OpenBLAS_INCLUDE_DIRS} -pthread)
-        set(MATH_LIB_LINK_FLAGS ${OpenBLAS_LIBRARIES} ${OpenBLAS_ROOT}/lib/liblapack.dylib -lm -lpthread -ldl -fopenmp -lclapack )
+        set(MATH_LIB_LINK_FLAGS ${OpenBLAS_LIBRARIES} ${OpenBLAS_ROOT}/lib/liblapack.dylib -lm -lpthread -ldl -fopenmp -lclapack)
     elseif (CMAKE_CXX_COMPILER_ID MATCHES "Intel")
         message("Don't support intel compiler to compile OpenBlas")
     endif ()
@@ -107,10 +107,6 @@ endif ()
 find_path(TENSOR_HEADER_PATH "qlten")
 find_path(MPS2_HEADER_PATH "qlmps")
 find_package(hptt)
-find_package(Boost
-        1.74.0
-        REQUIRED
-        COMPONENTS serialization mpi)
 find_package(MPI REQUIRED)
 #set omp flag
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
@@ -127,15 +123,12 @@ add_compile_options(${MATH_LIB_COMPILE_FLAGS} ${OMP_FLAGS})
 include_directories(${MPS2_HEADER_PATH}
         ${TENSOR_HEADER_PATH}
         ${hptt_INCLUDE_DIR}
-        ${Boost_INCLUDE_DIR}
         ${MPI_CXX_HEADER_DIR}
 )
 
 link_libraries(
         ${hptt_LIBRARY}
         ${MATH_LIB_LINK_FLAGS}
-        Boost::serialization
-        Boost::mpi
         ${MPI_CXX_LINK_FLAGS}
         ${MPI_mpi_LIBRARY}
 )

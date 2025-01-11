@@ -18,7 +18,7 @@
 
 #include <cstdlib>
 #include "qlten/qlten.h"
-#include "boost/mpi.hpp"                                            //boost::mpi
+                                            //boost::mpi
 #include "qlmps/algo_mpi/mps_algo_order.h"                         //VMPSORDER
 #include "qlmps/algo_mpi/vmps/vmps_mpi_init_master.h"                           //MPI vmps initial
 #include "qlmps/algo_mpi/vmps/vmps_mpi_init_slave.h"                           //MPI vmps initial
@@ -67,7 +67,7 @@ inline QLTEN_Double TwoSiteFiniteVMPS2(
     const char start_direction
 ) {
   QLTEN_Double e0(0.0);
-  if (world.rank() == kMasterRank) {
+  if (rank == kMPIMasterRank) {
     e0 = MasterTwoSiteFiniteVMPS2(mps, mpo, sweep_params, world, start_site, start_direction);
   } else {
     SlaveTwoSiteFiniteVMPS<TenElemT, QNT>(mpo, world);
@@ -89,7 +89,7 @@ QLTEN_Double MasterTwoSiteFiniteVMPS2(
   assert(mps.size() == mpo.size());
   std::cout << "***** Two-Site Noised Update VMPS FIX Program (with MPI Parallel) *****" << "\n";
   MasterBroadcastOrder(program_start, world);
-  for (size_t node = 1; node < world.size(); node++) {
+  for (size_t node = 1; node < mpi_size; node++) {
     int node_num;
     world.recv(node, 2 * node, node_num);
     if (node_num == node) {
@@ -397,7 +397,7 @@ double MasterTwoSiteFiniteVMPSUpdate2(
 #endif
   Timer lancz_timer("two_site_fvmps_lancz");
   MasterBroadcastOrder(lanczos, world);
-  broadcast(world, lsite_idx, kMasterRank);
+  broadcast(world, lsite_idx, kMPIMasterRank);
 //  for(size_t i = 0; i < 4; i++) {
 //    std::cout << " raw data of eff_ham[" << i <<"] = " << eff_ham[i]->GetBlkSparDataTen().GetActualRawDataSize() << std::endl;
 //  }

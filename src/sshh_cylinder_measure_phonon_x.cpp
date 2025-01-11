@@ -23,9 +23,11 @@ using namespace qlten;
 using namespace qlmps;
 
 int main(int argc, char *argv[]) {
-  namespace mpi = boost::mpi;
-  mpi::environment env;
-  mpi::communicator world;
+  MPI_Init(nullptr, nullptr);
+  MPI_Comm comm = MPI_COMM_WORLD;
+  int rank, mpi_size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &mpi_size);
   clock_t startTime, endTime;
   startTime = clock();
 
@@ -83,7 +85,7 @@ int main(int argc, char *argv[]) {
     std::vector<Tensor> op_vec2dag = {adag, a, sqrt(2) * aadag + sqrt(6) * n_a};
     std::vector<Tensor> op_vec3 = {x, n_a, sqrt(3) * aadag + sqrt(7) * n_a};
     std::vector<Tensor> op_vec4 = {x, aadag, aadag + sqrt(5) * n_a};
-    switch (world.rank()) {
+    switch (rank) {
       case 0:x1 = MeasureOnePhoneOp(mps, op_vec1, Bsite_set, "phonon_x1");
         x1_vec.reserve(x1.size());
         for (size_t i = 0; i < x1.size(); i++) {
@@ -118,7 +120,7 @@ int main(int argc, char *argv[]) {
     }
     //for matlab plot:
     //x = 2*x1 + 2*x2 + x3 + x4;
-    if (world.rank() == 0) {
+    if (rank == 0) {
       x_vec.resize(x1_vec.size());
       for (size_t i = 0; i < x1.size(); i++) {
         x_vec[i] = 2 * x1_vec[i] + 2 * x2_vec[i] + x3_vec[i] + x4_vec[i];

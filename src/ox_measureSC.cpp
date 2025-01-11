@@ -23,7 +23,7 @@
 
 #include "qlten/utility/timer.h"
 
-#include "boost/mpi.hpp"
+
 
 using std::cout;
 using std::endl;
@@ -36,9 +36,11 @@ using qlmps::MeasureElectronPhonon4PointFunction;
 
 
 int main(int argc, char *argv[]) {
-  namespace mpi = boost::mpi;
-  mpi::environment env;
-  mpi::communicator world;
+  MPI_Init(nullptr, nullptr);
+  MPI_Comm comm = MPI_COMM_WORLD;
+  int rank, mpi_size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &mpi_size);
   clock_t startTime, endTime;
   startTime = clock();
 
@@ -130,13 +132,13 @@ int main(int argc, char *argv[]) {
     file_name_postfix = "";
   }
 
-  if(world.rank()==0){
+  if(rank==0){
     MeasureElectronPhonon4PointFunction(mps, sc_phys_ops_a, fourpoint_sitessetF, Np, "scsxxa" + file_name_postfix);//PS for plaquette symmetry
-  }else if(world.rank()==1){
+  }else if(rank==1){
     MeasureElectronPhonon4PointFunction(mps, sc_phys_ops_b, fourpoint_sitessetF, Np, "scsxxb" + file_name_postfix);
-  }else if(world.rank()==2){
+  }else if(rank==2){
     MeasureElectronPhonon4PointFunction(mps, sc_phys_ops_c, fourpoint_sitessetF, Np, "scsxxc" + file_name_postfix);
-  }else if(world.rank()==3){
+  }else if(rank==3){
     MeasureElectronPhonon4PointFunction(mps, sc_phys_ops_d, fourpoint_sitessetF, Np, "scsxxd" + file_name_postfix);
   }
 

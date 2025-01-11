@@ -15,12 +15,14 @@ int main(int argc, char *argv[]) {
   using namespace std;
   using namespace qlmps;
   using namespace qlten;
-  namespace mpi = boost::mpi;
-  mpi::environment env;
-  mpi::communicator world;
+  MPI_Init(nullptr, nullptr);
+  MPI_Comm comm = MPI_COMM_WORLD;
+  int rank, mpi_size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &mpi_size);
   CaseParams params(argv[1]);
 
-  if (world.rank() == 0 && world.size() > 1 && params.TotalThreads > 2) {
+  if (rank == 0 && mpi_size > 1 && params.TotalThreads > 2) {
     qlten::hp_numeric::SetTensorManipulationThreads(params.TotalThreads - 2);
   } else {
     qlten::hp_numeric::SetTensorManipulationThreads(params.TotalThreads);
@@ -53,7 +55,7 @@ int main(int argc, char *argv[]) {
   const std::string phonon_disp_data_dir = "phonon_displacement";
   const std::string horizontal_file = "horizontal_x";
   const std::string vertical_file = "vertical_x";
-  if (world.rank() == 0) {
+  if (rank == 0) {
     if (IsPathExist(phonon_disp_data_dir)) {
       //has phonon data, load the data
       //two files, one horizontal_x, has N data,
@@ -116,7 +118,7 @@ int main(int argc, char *argv[]) {
 
   /****** Initialize MPS ******/
   FiniteMPST mps(sites);
-  if (world.rank() == 0) {
+  if (rank == 0) {
     if (!IsPathExist(kMpsPath) || !(N == GetNumofMps())) {
       cout << "Initial mps as direct product state." << endl;
       std::vector<size_t> stat_labs(N, 0);
@@ -215,7 +217,7 @@ int main(int argc, char *argv[]) {
 
     //measure hopping and update the phonon displacement
     //TODO: Optimize
-    if (world.rank() == 0) {
+    if (rank == 0) {
       mps.Load(sweep_params.mps_path);
       MeasuRes<TenElemT> hopping_data1 = MeasureTwoSiteOp(mps,
                                                           hopping1,
@@ -269,7 +271,7 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    if (world.rank() == 0) {
+    if (rank == 0) {
       double phonon_energy = 0.0;
       for (size_t i = 0; i < N; i++) {
         phonon_energy += vertical_x[i] * vertical_x[i];

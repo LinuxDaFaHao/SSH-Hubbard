@@ -141,7 +141,7 @@ inline MeasuRes<TenElemT> MeasureTwoSiteFermionOp(
     const std::vector<std::vector<size_t>> &sites_set,
     const size_t Ly,
     const std::string &res_file_basename,
-    const boost::mpi::communicator &world
+    const MPI_Comm& comm
 ) {
   assert(mps.empty());
 
@@ -153,9 +153,9 @@ inline MeasuRes<TenElemT> MeasureTwoSiteFermionOp(
 
   assert(sites_set[0].size() == 2);
   const size_t total_event_size = sites_set.size();
-  assert(world.size() >= Ly);
+  assert(mpi_size >= Ly);
   const size_t event_size_every_group = total_event_size / Ly;
-  const size_t group = world.rank();
+  const size_t group = rank;
   MeasuRes<TenElemT> measure_res;
   if (group < Ly) {
     const size_t site1 = sites_set[group * event_size_every_group][0];
@@ -171,7 +171,7 @@ inline MeasuRes<TenElemT> MeasureTwoSiteFermionOp(
     measure_res = MeasureTwoSiteFermionOpGroup(mps, initial_center, phys_ops1, phys_ops2, site1, site2_set);
   }
   if (group >= Ly) {
-    std::cout << "warning: processor " << world.rank() << " are idle." << std::endl;
+    std::cout << "warning: processor " << rank << " are idle." << std::endl;
   }
 
   if (group == 0) {

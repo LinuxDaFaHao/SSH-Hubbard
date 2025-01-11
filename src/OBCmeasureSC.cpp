@@ -22,7 +22,7 @@
 
 #include "qlten/utility/timer.h"
 
-#include "boost/mpi.hpp"
+
 
 using std::cout;
 using std::endl;
@@ -34,9 +34,11 @@ using qlten::Timer;
 using qlmps::MeasureElectronPhonon4PointFunction;
 
 int main(int argc, char *argv[]) {
-  namespace mpi = boost::mpi;
-  mpi::environment env;
-  mpi::communicator world;
+  MPI_Init(nullptr, nullptr);
+  MPI_Comm comm = MPI_COMM_WORLD;
+  int rank, mpi_size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &mpi_size);
   clock_t startTime, endTime;
   startTime = clock();
 
@@ -140,22 +142,22 @@ int main(int argc, char *argv[]) {
     file_name_postfix = "";
   }
 
-  if (world.rank() == 0) {
+  if (rank == 0) {
     //yx, yy,yy',yy'
     MeasureElectronPhonon4PointFunction(mps, Ly, sc_phys_ops_a, fourpoint_sitessetF, "scsa" + file_name_postfix);
-  } else if (world.rank() == 1) {
+  } else if (rank == 1) {
     MeasureElectronPhonon4PointFunction(mps, Ly, sc_phys_ops_b, fourpoint_sitessetF, "scsb" + file_name_postfix);
-  } else if (world.rank() == 2) {
+  } else if (rank == 2) {
     MeasureElectronPhonon4PointFunction(mps, Ly, sc_phys_ops_c, fourpoint_sitessetF, "scsc" + file_name_postfix);
-  } else if (world.rank() == 3) {
+  } else if (rank == 3) {
     MeasureElectronPhonon4PointFunction(mps, Ly, sc_phys_ops_d, fourpoint_sitessetF, "scsd" + file_name_postfix);
-  } else if (world.rank() == 4) {
+  } else if (rank == 4) {
     MeasureElectronPhonon4PointFunction(mps, Ly, sc_phys_ops_b, xx_fourpoint_sitessetF, "scsxxa" + file_name_postfix);
-  } else if (world.rank() == 5) {
+  } else if (rank == 5) {
     MeasureElectronPhonon4PointFunction(mps, Ly, sc_phys_ops_c, xx_fourpoint_sitessetF, "scsxxb" + file_name_postfix);
-  } else if (world.rank() == 6) {
+  } else if (rank == 6) {
     MeasureElectronPhonon4PointFunction(mps, Ly, sc_phys_ops_d, xx_fourpoint_sitessetF, "scsxxc" + file_name_postfix);
-  } else if (world.rank() == 7) {
+  } else if (rank == 7) {
     MeasureElectronPhonon4PointFunction(mps, Ly, sc_phys_ops_d, xx_fourpoint_sitessetF, "scsxxd" + file_name_postfix);
   }
 

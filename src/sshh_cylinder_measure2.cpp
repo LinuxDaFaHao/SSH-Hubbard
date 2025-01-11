@@ -19,8 +19,6 @@
 
 #include "qlten/utility/timer.h"
 
-#include "boost/mpi.hpp"
-
 using std::cout;
 using std::endl;
 using std::vector;
@@ -30,9 +28,11 @@ using qlmps::MeasureOneSiteOp;
 using qlten::Timer;
 
 int main(int argc, char *argv[]) {
-  namespace mpi = boost::mpi;
-  mpi::environment env;
-  mpi::communicator world;
+  MPI_Init(nullptr, nullptr);
+  MPI_Comm comm = MPI_COMM_WORLD;
+  int rank, mpi_size;
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &mpi_size);
   clock_t startTime, endTime;
   startTime = clock();
 
@@ -43,8 +43,8 @@ int main(int argc, char *argv[]) {
   CaseParams params(argv[1]);
 
   size_t Lx = params.Lx, Ly = params.Ly, Np = params.Np;
-  if (world.size() != Ly) {
-    std::cout << "world.size() should = " << Ly << std::endl;
+  if (mpi_size != Ly) {
+    std::cout << "mpi_size should = " << Ly << std::endl;
     exit(1);
   }
   size_t N = Lx * Ly + (2 * Lx * Ly - Ly) * Np;
@@ -86,7 +86,6 @@ int main(int argc, char *argv[]) {
   SiteVec<TenElemT, U1U1QN> sites = SiteVec<TenElemT, U1U1QN>(pb_out_set);
   FiniteMPST mps(sites);
 
-
   qlten::hp_numeric::SetTensorManipulationThreads(params.TotalThreads);
 
   vector<vector<size_t>> two_point_sites_setF;
@@ -108,7 +107,8 @@ int main(int argc, char *argv[]) {
   }
 
   Timer twosite_timer("measure two site operators");
-  if (argc == 2) {   //2023 Jun 12, to reply referee A in PRL, avoid repeat to calculate the bosonic operators' correlations.
+  if (argc
+      == 2) {   //2023 Jun 12, to reply referee A in PRL, avoid repeat to calculate the bosonic operators' correlations.
     MeasureTwoSiteOp(mps, sz, sz, two_point_sites_setF, Ly, "szsz" + file_name_postfix, world);
     MeasureTwoSiteOp(mps, sp, sm, two_point_sites_setF, Ly, "spsm" + file_name_postfix, world);
     MeasureTwoSiteOp(mps, sm, sp, two_point_sites_setF, Ly, "smsp" + file_name_postfix, world);
@@ -116,26 +116,26 @@ int main(int argc, char *argv[]) {
     MeasureTwoSiteOp(mps, cupccdnc, cdnacupa, two_point_sites_setF, Ly, "onsitesc" + file_name_postfix, world);
   }
   qlmps::MeasureTwoSiteFermionOp(mps,
-                                  bupc,
-                                  bupa,
-                                  two_point_sites_setF,
-                                  Ly,
-                                  "single_particle" + file_name_postfix,
-                                  world); // correlation <c^dag_spinup(i) c_spinup(j)>
+                                 bupc,
+                                 bupa,
+                                 two_point_sites_setF,
+                                 Ly,
+                                 "single_particle" + file_name_postfix,
+                                 world); // correlation <c^dag_spinup(i) c_spinup(j)>
   qlmps::MeasureTwoSiteFermionOp(mps,
-                                  -Fbdnc,
-                                  Fbdna,
-                                  two_point_sites_setF,
-                                  Ly,
-                                  "single_particle" + file_name_postfix,
-                                  world);// correlation <c^dag_spindown(i) c_spindown(j)>
+                                 -Fbdnc,
+                                 Fbdna,
+                                 two_point_sites_setF,
+                                 Ly,
+                                 "single_particle" + file_name_postfix,
+                                 world);// correlation <c^dag_spindown(i) c_spindown(j)>
   cout << "measured two point function.<====" << endl;
   twosite_timer.PrintElapsed();
 
   endTime = clock();
   cout << "CPU Time : " << (double) (endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
 
+  MPI_Finalize();
   return 0;
-
 }
 
